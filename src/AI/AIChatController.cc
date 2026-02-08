@@ -13,6 +13,7 @@
 #include <QtCore/QUrl>
 #include <QtNetwork/QNetworkRequest>
 #include <QtPositioning/QGeoCoordinate>
+#include <cmath>
 
 #include "AppSettings.h"
 #include "MultiVehicleManager.h"
@@ -338,6 +339,33 @@ void AIChatController::_executeCommand(const QString& commandType, const QJsonOb
         double alt = params["altitude"].toDouble();
         QGeoCoordinate coord(lat, lon, alt);
         vehicle->guidedModeGotoLocation(coord);
+    } else if (commandType == "MOVE_DIRECTION") {
+        QString direction = params["direction"].toString().toUpper();
+        double distance = params["distance"].toDouble(10.0);
+
+        // Get current position
+        double lat = vehicle->latitude();
+        double lon = vehicle->longitude();
+        double alt = vehicle->altitudeRelative()->rawValue().toDouble();
+
+        // Calculate offset based on direction (approximate meters to degrees)
+        double latOffset = 0.0;
+        double lonOffset = 0.0;
+        double metersPerDegreeLat = 111320.0;
+        double metersPerDegreeLon = 111320.0 * cos(lat * M_PI / 180.0);
+
+        if (direction == "NORTH") {
+            latOffset = distance / metersPerDegreeLat;
+        } else if (direction == "SOUTH") {
+            latOffset = -distance / metersPerDegreeLat;
+        } else if (direction == "EAST") {
+            lonOffset = distance / metersPerDegreeLon;
+        } else if (direction == "WEST") {
+            lonOffset = -distance / metersPerDegreeLon;
+        }
+
+        QGeoCoordinate newCoord(lat + latOffset, lon + lonOffset, alt);
+        vehicle->guidedModeGotoLocation(newCoord);
     } else {
         _appendToHistory("System", "Command not implemented: " + commandType, "#FFA500");
     }

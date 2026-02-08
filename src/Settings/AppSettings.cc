@@ -1,27 +1,23 @@
 #include "AppSettings.h"
-#include "QGCFileHelper.h"
-#include "QGCPalette.h"
-#include "QGCApplication.h"
-#include "QGCMAVLink.h"
+
 #include "LinkManager.h"
+#include "QGCApplication.h"
+#include "QGCFileHelper.h"
+#include "QGCMAVLink.h"
+#include "QGCPalette.h"
 
 #ifdef Q_OS_ANDROID
 #include "AndroidInterface.h"
 #endif
 
-#include <QtCore/QStandardPaths>
 #include <QtCore/QDir>
 #include <QtCore/QSettings>
+#include <QtCore/QStandardPaths>
 
 // Release languages are 90%+ complete
 QList<QLocale::Language> AppSettings::_rgReleaseLanguages = {
-    QLocale::English,
-    QLocale::Azerbaijani,
-    QLocale::Chinese,
-    QLocale::Japanese,
-    QLocale::Korean,
-    QLocale::Portuguese,
-    QLocale::Russian,
+    QLocale::English, QLocale::Azerbaijani, QLocale::Chinese, QLocale::Japanese,
+    QLocale::Korean,  QLocale::Portuguese,  QLocale::Russian,
 };
 
 // Partial languages are 40%+ complete
@@ -29,29 +25,27 @@ QList<QLocale::Language> AppSettings::_rgPartialLanguages = {
     QLocale::Ukrainian,
 };
 
-AppSettings::LanguageInfo_t AppSettings::_rgLanguageInfo[] = {
-    { QLocale::AnyLanguage,     "System" },                     // Must be first
-    { QLocale::Azerbaijani,     "Azerbaijani (Azerbaijani)" },
-    { QLocale::Bulgarian,       "български (Bulgarian)" },
-    { QLocale::Chinese,         "中文 (Chinese)" },
-    { QLocale::Dutch,           "Nederlands (Dutch)" },
-    { QLocale::English,         "English" },
-    { QLocale::Finnish,         "Suomi (Finnish)" },
-    { QLocale::French,          "Français (French)" },
-    { QLocale::German,          "Deutsche (German)" },
-    { QLocale::Greek,           "Ελληνικά (Greek)" },
-    { QLocale::Hebrew,          "עברית (Hebrew)" },
-    { QLocale::Italian,         "Italiano (Italian)" },
-    { QLocale::Japanese,        "日本語 (Japanese)" },
-    { QLocale::Korean,          "한국어 (Korean)" },
-    { QLocale::NorwegianBokmal, "Norsk (Norwegian)" },
-    { QLocale::Polish,          "Polskie (Polish)" },
-    { QLocale::Portuguese,      "Português (Portuguese)" },
-    { QLocale::Russian,         "Pусский (Russian)" },
-    { QLocale::Spanish,         "Español (Spanish)" },
-    { QLocale::Swedish,         "Svenska (Swedish)" },
-    { QLocale::Turkish,         "Türk (Turkish)" }
-};
+AppSettings::LanguageInfo_t AppSettings::_rgLanguageInfo[] = {{QLocale::AnyLanguage, "System"},  // Must be first
+                                                              {QLocale::Azerbaijani, "Azerbaijani (Azerbaijani)"},
+                                                              {QLocale::Bulgarian, "български (Bulgarian)"},
+                                                              {QLocale::Chinese, "中文 (Chinese)"},
+                                                              {QLocale::Dutch, "Nederlands (Dutch)"},
+                                                              {QLocale::English, "English"},
+                                                              {QLocale::Finnish, "Suomi (Finnish)"},
+                                                              {QLocale::French, "Français (French)"},
+                                                              {QLocale::German, "Deutsche (German)"},
+                                                              {QLocale::Greek, "Ελληνικά (Greek)"},
+                                                              {QLocale::Hebrew, "עברית (Hebrew)"},
+                                                              {QLocale::Italian, "Italiano (Italian)"},
+                                                              {QLocale::Japanese, "日本語 (Japanese)"},
+                                                              {QLocale::Korean, "한국어 (Korean)"},
+                                                              {QLocale::NorwegianBokmal, "Norsk (Norwegian)"},
+                                                              {QLocale::Polish, "Polskie (Polish)"},
+                                                              {QLocale::Portuguese, "Português (Portuguese)"},
+                                                              {QLocale::Russian, "Pусский (Russian)"},
+                                                              {QLocale::Spanish, "Español (Spanish)"},
+                                                              {QLocale::Swedish, "Svenska (Swedish)"},
+                                                              {QLocale::Turkish, "Türk (Turkish)"}};
 
 DECLARE_SETTINGGROUP(App, "")
 {
@@ -65,36 +59,40 @@ DECLARE_SETTINGGROUP(App, "")
     // Mobile builds always use the runtime generated location for savePath.
     bool userHasModifiedSavePath = false;
 #else
-    bool userHasModifiedSavePath = !savePathFact->rawValue().toString().isEmpty() || !_nameToMetaDataMap[savePathName]->rawDefaultValue().toString().isEmpty();
+    bool userHasModifiedSavePath = !savePathFact->rawValue().toString().isEmpty() ||
+                                   !_nameToMetaDataMap[savePathName]->rawDefaultValue().toString().isEmpty();
 #endif
 
     if (!userHasModifiedSavePath) {
 #if defined(Q_OS_ANDROID) || defined(Q_OS_IOS)
-    #ifdef Q_OS_IOS
+#ifdef Q_OS_IOS
         // This will expose the directories directly to the File iOs app
         QDir rootDir = QDir(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
         savePathFact->setRawValue(rootDir.absolutePath());
-    #else
+#else
         QString rootDirPath;
-        #ifdef Q_OS_ANDROID
-            if (!androidDontSaveToSDCard()->rawValue().toBool()) {
-                rootDirPath = AndroidInterface::getSDCardPath();
-                qDebug() << "AndroidInterface::getSDCardPath();" << rootDirPath;
-                if (rootDirPath.isEmpty() || !QDir(rootDirPath).exists()) {
-                    rootDirPath.clear();
-                    qDebug() << "Save to SD card specified for application data. But no SD card present or permissions not granted. Using internal storage.";
-                } else if (!QFileInfo(rootDirPath).isWritable()) {
-                    rootDirPath.clear();
-                    qgcApp()->showAppMessage(AppSettings::tr("Save to SD card specified for application data. But SD card is write protected. Using internal storage."));
-                }
+#ifdef Q_OS_ANDROID
+        if (!androidDontSaveToSDCard()->rawValue().toBool()) {
+            rootDirPath = AndroidInterface::getSDCardPath();
+            qDebug() << "AndroidInterface::getSDCardPath();" << rootDirPath;
+            if (rootDirPath.isEmpty() || !QDir(rootDirPath).exists()) {
+                rootDirPath.clear();
+                qDebug() << "Save to SD card specified for application data. But no SD card present or permissions not "
+                            "granted. Using internal storage.";
+            } else if (!QFileInfo(rootDirPath).isWritable()) {
+                rootDirPath.clear();
+                qgcApp()->showAppMessage(
+                    AppSettings::tr("Save to SD card specified for application data. But SD card is write protected. "
+                                    "Using internal storage."));
             }
-        #endif
+        }
+#endif
         if (rootDirPath.isEmpty()) {
             rootDirPath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
         }
         savePathFact->setRawValue(QDir(rootDirPath).filePath(appName));
-    #endif
-    savePathFact->setVisible(false);
+#endif
+        savePathFact->setVisible(false);
 #else
         QDir rootDir = QDir(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
         savePathFact->setRawValue(rootDir.filePath(appName));
@@ -139,6 +137,10 @@ DECLARE_SETTINGSFACT(AppSettings, disableAllPersistence)
 DECLARE_SETTINGSFACT(AppSettings, firstRunPromptIdsShown)
 DECLARE_SETTINGSFACT(AppSettings, loginAirLink)
 DECLARE_SETTINGSFACT(AppSettings, passAirLink)
+DECLARE_SETTINGSFACT(AppSettings, aiBackendEnabled)
+DECLARE_SETTINGSFACT(AppSettings, aiBackendUrl)
+DECLARE_SETTINGSFACT(AppSettings, aiBackendMode)
+DECLARE_SETTINGSFACT(AppSettings, aiBackendModel)
 
 DECLARE_SETTINGSFACT_NO_FUNC(AppSettings, indoorPalette)
 {
@@ -155,21 +157,21 @@ DECLARE_SETTINGSFACT_NO_FUNC(AppSettings, qLocaleLanguage)
         _qLocaleLanguageFact = _createSettingsFact(qLocaleLanguageName);
         connect(_qLocaleLanguageFact, &Fact::rawValueChanged, this, &AppSettings::_qLocaleLanguageChanged);
 
-        FactMetaData*   metaData            = _qLocaleLanguageFact->metaData();
-        QStringList     rgEnumStrings;
-        QVariantList    rgEnumValues;
+        FactMetaData* metaData = _qLocaleLanguageFact->metaData();
+        QStringList rgEnumStrings;
+        QVariantList rgEnumValues;
 
         // System is always an available selection
         rgEnumStrings.append(_rgLanguageInfo[0].languageName);
         rgEnumValues.append(_rgLanguageInfo[0].languageId);
 
-        for (const auto& languageInfo: _rgLanguageInfo) {
+        for (const auto& languageInfo : _rgLanguageInfo) {
             if (_rgReleaseLanguages.contains(languageInfo.languageId)) {
                 rgEnumStrings.append(languageInfo.languageName);
                 rgEnumValues.append(languageInfo.languageId);
             }
         }
-        for (const auto& languageInfo: _rgLanguageInfo) {
+        for (const auto& languageInfo : _rgLanguageInfo) {
             if (_rgPartialLanguages.contains(languageInfo.languageId)) {
                 rgEnumStrings.append(QString(languageInfo.languageName) + AppSettings::tr(" (Partial)"));
                 rgEnumValues.append(languageInfo.languageId);
@@ -177,8 +179,9 @@ DECLARE_SETTINGSFACT_NO_FUNC(AppSettings, qLocaleLanguage)
         }
 #ifdef QGC_DAILY_BUILD
         // Only daily builds include full set of languages for testing purposes
-        for (const auto& languageInfo: _rgLanguageInfo) {
-            if (!_rgReleaseLanguages.contains(languageInfo.languageId) && !_rgPartialLanguages.contains(languageInfo.languageId)) {
+        for (const auto& languageInfo : _rgLanguageInfo) {
+            if (!_rgReleaseLanguages.contains(languageInfo.languageId) &&
+                !_rgPartialLanguages.contains(languageInfo.languageId)) {
                 rgEnumStrings.append(QString(languageInfo.languageName) + AppSettings::tr(" (Test Only)"));
                 rgEnumValues.append(languageInfo.languageId);
             }
@@ -286,7 +289,7 @@ QList<int> AppSettings::firstRunPromptsIdsVariantToList(const QVariant& firstRun
 
     QStringList strIdList = firstRunPromptIds.toString().split(",", Qt::SkipEmptyParts);
 
-    for (const QString& strId: strIdList) {
+    for (const QString& strId : strIdList) {
         rgIds.append(strId.toInt());
     }
     return rgIds;
@@ -295,7 +298,7 @@ QList<int> AppSettings::firstRunPromptsIdsVariantToList(const QVariant& firstRun
 QVariant AppSettings::firstRunPromptsIdsListToVariant(const QList<int>& rgIds)
 {
     QStringList strList;
-    for (int id: rgIds) {
+    for (int id : rgIds) {
         strList.append(QString::number(id));
     }
     return QVariant(strList.join(","));
@@ -321,7 +324,7 @@ QLocale::Language AppSettings::_qLocaleLanguageEarlyAccess(void)
 
     // Note that the AppSettings group has no group name
     QLocale::Language localeLanguage = static_cast<QLocale::Language>(settings.value(qLocaleLanguageName).toInt());
-    for (auto& languageInfo: _rgLanguageInfo) {
+    for (auto& languageInfo : _rgLanguageInfo) {
         if (languageInfo.languageId == localeLanguage) {
             return localeLanguage;
         }

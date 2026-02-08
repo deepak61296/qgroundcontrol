@@ -247,6 +247,9 @@ qt_add_qml_module(QGroundControlControlsModule
         # src/QtLocationPlugin/QMLControl/
         OfflineMapEditor.qml
 
+        # AI Chat Panel
+        AIChatPanel.qml
+
         ScreenTools.qml
     NO_PLUGIN
 )

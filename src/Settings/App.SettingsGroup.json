@@ -270,6 +270,36 @@
     "shortDesc": "AirLink Password",
     "type": "string",
     "default": ""
+},
+{
+    "name": "aiBackendEnabled",
+    "shortDesc": "Enable AI Backend",
+    "longDesc": "Enable AI chat assistant for natural language drone control. Press Ctrl+L to open chat panel.",
+    "type": "bool",
+    "default": false
+},
+{
+    "name": "aiBackendUrl",
+    "shortDesc": "AI Backend URL",
+    "longDesc": "URL of the ArduPilot AI Backend server",
+    "type": "string",
+    "default": "http://localhost:5000"
+},
+{
+    "name": "aiBackendMode",
+    "shortDesc": "AI Mode",
+    "longDesc": "AI operation mode: Ask (read-only queries), Agent (execute commands)",
+    "type": "uint32",
+    "enumStrings": "Ask,Agent",
+    "enumValues": "0,1",
+    "default": 0
+},
+{
+    "name": "aiBackendModel",
+    "shortDesc": "AI Model",
+    "longDesc": "Ollama model to use for AI processing",
+    "type": "string",
+    "default": "qwen2.5:3b"
 }
 ]
 }

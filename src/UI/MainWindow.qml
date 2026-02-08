@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import QtQuick.Window
 
 import QGroundControl
+import QGroundControl.AI
 import QGroundControl.Controls
 import QGroundControl.FactControls
 import QGroundControl.FlyView
@@ -263,6 +264,23 @@ ApplicationWindow {
         id:             planView
         anchors.fill:   parent
         visible:        false
+    }
+
+    // AI Chat Panel - Right-side overlay
+    AIChatPanel {
+        id:                     aiChatPanel
+        anchors.top:            parent.top
+        anchors.bottom:         parent.bottom
+        anchors.topMargin:      ScreenTools.toolbarHeight
+        x:                      parent.width
+        visible:                QGroundControl.settingsManager.appSettings.aiBackendEnabled.rawValue
+    }
+
+    // Ctrl+L keyboard shortcut for AI Chat
+    Shortcut {
+        sequence:   "Ctrl+L"
+        enabled:    QGroundControl.settingsManager.appSettings.aiBackendEnabled.rawValue && (flyView.visible || planView.visible)
+        onActivated: aiChatPanel.isOpen = !aiChatPanel.isOpen
     }
 
     footer: LogReplayStatusBar {

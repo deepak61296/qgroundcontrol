@@ -33,6 +33,13 @@ ListModel {
     }
 
     ListElement {
+        name: qsTr("AI Backend")
+        url: "qrc:/qml/QGroundControl/AppSettings/AIBackendSettings.qml"
+        iconUrl: "qrc:/InstrumentValueIcons/conversation.svg"
+        pageVisible: function() { return true }
+    }
+
+    ListElement {
         name: "Divider"
     }
 

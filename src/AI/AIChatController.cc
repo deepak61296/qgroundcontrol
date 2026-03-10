@@ -22,6 +22,7 @@
 #include "QmlObjectListModel.h"
 #include "FactGroup.h"
 #include "FactGroups/BatteryFactGroupListModel.h"
+#include "ParameterManager.h"
 
 AIChatController::AIChatController(QObject* parent) : QObject(parent), _networkManager(new QNetworkAccessManager(this))
 {
@@ -366,6 +367,50 @@ void AIChatController::_executeCommand(const QString& commandType, const QJsonOb
 
         QGeoCoordinate newCoord(lat + latOffset, lon + lonOffset, alt);
         vehicle->guidedModeGotoLocation(newCoord);
+    } else if (commandType == "ALTITUDE_CHANGE") {
+        double change = params["change"].toDouble(0.0);
+        double currentAlt = vehicle->altitudeRelative()->rawValue().toDouble();
+        double newAlt = currentAlt + change;
+        if (newAlt > 0) {
+            vehicle->guidedModeChangeAltitude(newAlt, false);
+        } else {
+            _appendToHistory("System", "Error: Target altitude must be positive", "#FF6B6B");
+        }
+    } else if (commandType == "SET_SPEED") {
+        double speed = params["speed"].toDouble(5.0);
+        vehicle->guidedModeChangeGroundSpeedMetersSecond(speed);
+    } else if (commandType == "SET_YAW") {
+        double yaw = params["heading"].toDouble(0.0);
+        // Create a coordinate with the yaw as heading - use current position
+        double lat = vehicle->latitude();
+        double lon = vehicle->longitude();
+        // Calculate a point in the desired heading direction
+        double distance = 100.0; // 100m in heading direction
+        double latOffset = distance * cos(yaw * M_PI / 180.0) / 111320.0;
+        double lonOffset = distance * sin(yaw * M_PI / 180.0) / (111320.0 * cos(lat * M_PI / 180.0));
+        QGeoCoordinate headingCoord(lat + latOffset, lon + lonOffset);
+        vehicle->guidedModeChangeHeading(headingCoord);
+    } else if (commandType == "GET_PARAM") {
+        QString paramName = params["name"].toString().toUpper();
+        Fact* fact = vehicle->parameterManager()->getParameter(-1, paramName);
+        if (fact) {
+            QString value = fact->rawValueString();
+            _appendToHistory("System", paramName + " = " + value, "#00C853");
+        } else {
+            _appendToHistory("System", "Parameter not found: " + paramName, "#FF6B6B");
+        }
+    } else if (commandType == "SET_PARAM") {
+        QString paramName = params["name"].toString().toUpper();
+        QVariant value = params["value"].toVariant();
+        Fact* fact = vehicle->parameterManager()->getParameter(-1, paramName);
+        if (fact) {
+            fact->setRawValue(value);
+            _appendToHistory("System", "Set " + paramName + " = " + value.toString(), "#00C853");
+        } else {
+            _appendToHistory("System", "Parameter not found: " + paramName, "#FF6B6B");
+        }
+    } else if (commandType == "REBOOT") {
+        vehicle->rebootVehicle();
     } else {
         _appendToHistory("System", "Command not implemented: " + commandType, "#FFA500");
     }

@@ -9,6 +9,16 @@
   </a>
 </p>
 
+# QGroundControl (AI Edition)
+
+> **🚀 ArduPilot AI Backend Integration**
+> This is a special fork of QGroundControl that features an integrated AI chat interface for natural language drone control.
+> 
+> **Main Project & Setup Instructions:** [ArduPilot AI Backend](https://github.com/deepak61296/ardupilot-ai-backend)
+> **Active Branch:** `feature/ai-backend-integration` (This is the default branch for this fork).
+
+---
+
 *QGroundControl* (QGC) is a highly intuitive and powerful Ground Control Station (GCS) designed for UAVs. Whether you're a first-time pilot or an experienced professional, QGC provides a seamless user experience for flight control and mission planning, making it the go-to solution for any *MAVLink-enabled drone*.
 
 ---

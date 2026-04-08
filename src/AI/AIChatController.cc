@@ -363,6 +363,16 @@ void AIChatController::_executeCommand(const QString& commandType, const QJsonOb
             lonOffset = distance / metersPerDegreeLon;
         } else if (direction == "WEST") {
             lonOffset = -distance / metersPerDegreeLon;
+        } else if (direction == "FORWARD" || direction == "BACKWARD" || direction == "LEFT" || direction == "RIGHT") {
+            double yaw = vehicle->heading()->rawValue().toDouble();
+            double angle = yaw;
+            
+            if (direction == "BACKWARD") angle += 180.0;
+            else if (direction == "RIGHT") angle += 90.0;
+            else if (direction == "LEFT") angle -= 90.0;
+            
+            latOffset = distance * cos(angle * M_PI / 180.0) / metersPerDegreeLat;
+            lonOffset = distance * sin(angle * M_PI / 180.0) / metersPerDegreeLon;
         }
 
         QGeoCoordinate newCoord(lat + latOffset, lon + lonOffset, alt);

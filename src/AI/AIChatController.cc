@@ -10,6 +10,7 @@
 
 #include <QtCore/QJsonArray>
 #include <QtCore/QJsonDocument>
+#include <QtCore/QThread>
 #include <QtCore/QUrl>
 #include <QtNetwork/QNetworkRequest>
 #include <QtPositioning/QGeoCoordinate>
@@ -128,8 +129,31 @@ void AIChatController::_onChatReplyFinished()
         emit messageReceived(aiResponse);
     }
 
-    // Handle command if present (Agent mode)
-    if (response.contains("command") && !response["command"].isNull()) {
+    // Handle commands if present (Agent mode)
+    // Support both single "command" and multi-step "commands" array
+    if (response.contains("commands") && response["commands"].isArray()) {
+        // Multi-step plan: execute each command sequentially
+        QJsonArray commandsArray = response["commands"].toArray();
+        _appendToHistory("System", QString("Executing %1-step plan...").arg(commandsArray.size()), "#FFA500");
+
+        for (int i = 0; i < commandsArray.size(); i++) {
+            QJsonObject command = commandsArray[i].toObject();
+            QString commandType = command["type"].toString();
+            QJsonObject params = command["params"].toObject();
+
+            if (!commandType.isEmpty()) {
+                _appendToHistory("System", QString("Step %1: %2").arg(i + 1).arg(commandType), "#FFA500");
+                _executeCommand(commandType, params);
+                emit commandReceived(commandType, params);
+
+                // Small delay between commands to let the FC process each one
+                if (i < commandsArray.size() - 1) {
+                    QThread::msleep(2000);
+                }
+            }
+        }
+    } else if (response.contains("command") && !response["command"].isNull()) {
+        // Single command (backward compatible)
         QJsonObject command = response["command"].toObject();
         QString commandType = command["type"].toString();
         QJsonObject params = command["params"].toObject();
@@ -421,6 +445,15 @@ void AIChatController::_executeCommand(const QString& commandType, const QJsonOb
         }
     } else if (commandType == "REBOOT") {
         vehicle->rebootVehicle();
+    } else if (commandType == "CIRCLE") {
+        double radius = params["radius"].toDouble(10.0);
+        // Set CIRCLE_RADIUS param (ArduPilot stores in cm)
+        Fact* radiusFact = vehicle->parameterManager()->getParameter(-1, "CIRCLE_RADIUS");
+        if (radiusFact) {
+            radiusFact->setRawValue(radius * 100.0);
+        }
+        vehicle->setFlightMode("Circle");
+        _appendToHistory("System", QString("Circling with radius %1m").arg(radius), "#00C853");
     } else {
         _appendToHistory("System", "Command not implemented: " + commandType, "#FFA500");
     }
